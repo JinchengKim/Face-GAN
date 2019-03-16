@@ -67,6 +67,19 @@ class FaceAging(object):
             [self.size_batch, 2],
             name='gender_labels'
         )
+
+        self.au1 = tf.placeholder{
+            tf.float32,
+            [self.size_batch, 1],
+            name = 'au1_labels'
+        }
+
+        self.au2 = tf.placeholder{
+            tf.float32,
+            [self.size_batch, 1],
+            name = 'au2_labels'
+        }
+
         self.z_prior = tf.placeholder(
             tf.float32,
             [self.size_batch, self.num_z_channels],
@@ -85,6 +98,8 @@ class FaceAging(object):
             z=self.z,
             y=self.age,
             gender=self.gender,
+            au1 = self.au1,
+            au2 = self.au2,
             enable_tile_label=self.enable_tile_label,
             tile_ratio=self.tile_ratio
         )
@@ -100,6 +115,8 @@ class FaceAging(object):
             image=self.G,
             y=self.age,
             gender=self.gender,
+            au1 = self.au1,
+            au2 = self.au2,
             is_training=self.is_training
         )
 
@@ -115,6 +132,8 @@ class FaceAging(object):
             image=self.input_image,
             y=self.age,
             gender=self.gender,
+            au1 = self.au1,
+            au2 = self.au2,
             is_training=self.is_training,
             reuse_variables=True
         )
@@ -278,6 +297,8 @@ class FaceAging(object):
             shape=(len(sample_files), 2),
             dtype=np.float32
         ) * self.image_value_range[0]
+        # get aus here
+        AUs = get_aus_from_image(image_path)
         for i, label in enumerate(sample_files):
             label = int(str(sample_files[i]).split('/')[-1].split('_')[0])
             if 0 <= label <= 5:

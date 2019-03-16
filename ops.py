@@ -4,13 +4,13 @@ import numpy as np
 from scipy.misc import imread, imresize, imsave
 
 
-def conv2d(input_map, num_output_channels, size_kernel=5, stride=2, name='conv2d'):
+def conv2d(input_image, num_output_channels, size_kernel=5, stride=2, name='conv2d'):
     with tf.variable_scope(name):
-        # stddev = np.sqrt(2.0 / (np.sqrt(input_map.get_shape()[-1].value * num_output_channels) * size_kernel ** 2))
+        # stddev = np.sqrt(2.0 / (np.sqrt(input_image.get_shape()[-1].value * num_output_channels) * size_kernel ** 2))
         stddev = .02
         kernel = tf.get_variable(
             name='w',
-            shape=[size_kernel, size_kernel, input_map.get_shape()[-1], num_output_channels],
+            shape=[size_kernel, size_kernel, input_image.get_shape()[-1], num_output_channels],
             dtype=tf.float32,
             initializer=tf.truncated_normal_initializer(stddev=stddev)
         )
@@ -20,8 +20,21 @@ def conv2d(input_map, num_output_channels, size_kernel=5, stride=2, name='conv2d
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0)
         )
-        conv = tf.nn.conv2d(input_map, kernel, strides=[1, stride, stride, 1], padding='SAME')
+        conv = tf.nn.conv2d(input_image, kernel, strides=[1, stride, stride, 1], padding='SAME')
         return tf.nn.bias_add(conv, biases)
+def linear_transform(input_image, tx = 0.1, ty = 0.3, tz = 0.3):
+    for x in input_image:
+        for y in x:
+            for z in y:
+                z = tx * ty * tz * z
+    return input_image
+
+def linear_transform_back(input_image, tx = 0.1, ty = 0.3, tz = 0.3):
+    for x in input_image:
+        for y in x:
+            for z in y:
+                z = z/(tx * ty * tz)
+    return input_image
 
 
 def fc(input_vector, num_output_length, name='fc'):
@@ -43,14 +56,14 @@ def fc(input_vector, num_output_length, name='fc'):
         return tf.matmul(input_vector, w) + b
 
 
-def deconv2d(input_map, output_shape, size_kernel=5, stride=2, stddev=0.02, name='deconv2d'):
+def deconv2d(input_image, output_shape, size_kernel=5, stride=2, stddev=0.02, name='deconv2d'):
     with tf.variable_scope(name):
-        # stddev = np.sqrt(1.0 / (np.sqrt(input_map.get_shape()[-1].value * output_shape[-1]) * size_kernel ** 2))
+        # stddev = np.sqrt(1.0 / (np.sqrt(input_image.get_shape()[-1].value * output_shape[-1]) * size_kernel ** 2))
         stddev = .02
         # filter : [height, width, output_channels, in_channels]
         kernel = tf.get_variable(
             name='w',
-            shape=[size_kernel, size_kernel, output_shape[-1], input_map.get_shape()[-1]],
+            shape=[size_kernel, size_kernel, output_shape[-1], input_image.get_shape()[-1]],
             dtype=tf.float32,
             initializer=tf.random_normal_initializer(stddev=stddev)
         )
@@ -60,7 +73,7 @@ def deconv2d(input_map, output_shape, size_kernel=5, stride=2, stddev=0.02, name
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0)
         )
-        deconv = tf.nn.conv2d_transpose(input_map, kernel, strides=[1, stride, stride, 1], output_shape=output_shape)
+        deconv = tf.nn.conv2d_transpose(input_image, kernel, strides=[1, stride, stride, 1], output_shape=output_shape)
         return tf.nn.bias_add(deconv, biases)
        
 
